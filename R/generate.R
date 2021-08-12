@@ -85,7 +85,7 @@ generate_test.genthat_trace <- function(trace, include_trace_dump=FALSE, format_
 
 
         code <- paste0(
-            'genthat_extracted_function <- function() {\n',
+            'genthat_extracted_call <- function() {\n',
                 globals,
                 if (nchar(globals) > 0) '\n' else '',
                 call,'\n',
@@ -138,12 +138,6 @@ save_test <- function(pkg, fun, code, output_dir) {
     stopifnot(dir.exists(dname) || dir.create(dname, recursive=TRUE))
 
     fname <- next_file_in_row(file.path(dname, "test.R"))
-
-    externals <- attr(code, "externals")
-    if (length(externals) > 0) {
-        fname_ext <- paste0(tools::file_path_sans_ext(fname), ".ext")
-        saveRDS(externals, fname_ext)
-    }
 
     write(paste(code, collapse="\n\n"), file=fname)
 

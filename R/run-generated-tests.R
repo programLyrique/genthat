@@ -10,7 +10,7 @@ test_generated_file <- function(test) {
         testthat::test_env()
     }
 
-    capture.output(r <- { source(test, local=env); env$genthat_extracted_function() })
+    capture.output(r <- { source(test, local=env); env$genthat_extracted_call() })
     r
 }
 
