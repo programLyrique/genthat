@@ -79,37 +79,22 @@ generate_test <- function(trace, ...) {
 #' @export
 generate_test.genthat_trace <- function(trace, include_trace_dump=FALSE, format_code=TRUE) {
     tryCatch({
-        externals <- new.env(parent=emptyenv())
         serializer <- new(Serializer)
         call <- generate_call(trace, serializer)
         globals <- generate_globals(trace$globals, serializer)
-        retv <- serializer$serialize_value(trace$retv)
 
-        header <- "library(testthat)\n\n"
-        if (include_trace_dump) {
-            header <- paste(header, dump_raw_trace(trace), sep="\n")
-        }
-
-        if (!is.null(trace$seed)) {
-            # .Random.seed is only looked in user environment
-            header <- paste0(header, ".Random.seed <<- .ext.seed\n\n")
-            externals$.ext.seed <- trace$seed
-        }
 
         code <- paste0(
-            header,
-            'test_that("', trace$fun, '", {\n',
-            globals,
-            if (nchar(globals) > 0) '\n' else '',
-            '\nexpect_equal(', call, ', ', retv, ')\n})'
+            'genthat_extracted_function <- function() {\n',
+                globals,
+                if (nchar(globals) > 0) '\n' else '',
+                call,'\n',
+            '}\n'
         )
 
         if (format_code) {
             code <- reformat_code(code)
         }
-
-        serializer$externals(externals)
-        attr(code, "externals") <- externals
 
         code
     }, error=function(e) {
