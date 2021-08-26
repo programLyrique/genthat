@@ -1,4 +1,4 @@
-create_trace <- function(fun, pkg=NULL, args=list(), globals=list(), retv, seed, error, failure, skipped=0) {
+create_trace <- function(fun, pkg=NULL, args=list(), globals=list(), retv, seed, error, failure, synthetic = FALSE, skipped=0) {
     stopifnot(is.character(fun) && length(fun) == 1)
     stopifnot(is.null(pkg) || (is.character(pkg) && length(pkg) == 1))
     stopifnot(missing(retv) || missing(error) || missing(failure))
@@ -24,6 +24,8 @@ create_trace <- function(fun, pkg=NULL, args=list(), globals=list(), retv, seed,
     } else {
         class(trace) <- "genthat_trace_entry"
     }
+
+    attr(trace, "synthetic") <- synthetic
 
     trace
 }
