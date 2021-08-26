@@ -79,8 +79,6 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
             # What about the seed?
             # and the globals?
             # We should reset them at the beginning also...
-            print("synthetic")
-            print(new_args)
             cat(ls.str(env))
             trace <- tryCatch({
                 res <- do.call(name, new_args, envir = env) #pakg::name?
