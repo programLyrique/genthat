@@ -65,25 +65,24 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
     store_trace(tracer, trace)
 
     # Synthetic traces
-
-    # the synthetic ones
-    flags <- Filter(function(e) is.logical(e) && !is.na(e), args)
-    # currently just each flag switched independently.
-    # TODO: 2^slength(flags) to explore...
-    new_args <- args
-    for(flag_name in names(flags)) {
-        new_args[[flag_name]] <- !args[[flag_name]]
-        # Execute here the function with the new flags!
-        # Quick and dirty: we should rather start it after, in a new try catch...
-        # We do not go for a recursive call to record trace
-        # (we would need to reactivate tracing)
-        # What about the seed?
-        # and the globals?
-        # We should reset them at the beginning also...
-        print("synthetic")
-        print(new_args)
-        cat(ls.str(env))
-        trace <- tryCatch({
+    if(getOption("genthat.synthetic", default = FALSE)) {
+        flags <- Filter(function(e) is.logical(e) && !is.na(e), args)
+        # currently just each flag switched independently.
+        # TODO: 2^slength(flags) to explore...
+        new_args <- args
+        for(flag_name in names(flags)) {
+            new_args[[flag_name]] <- !args[[flag_name]]
+            # Execute here the function with the new flags!
+            # Quick and dirty: we should rather start it after, in a new try catch...
+            # We do not go for a recursive call to record trace
+            # (we would need to reactivate tracing)
+            # What about the seed?
+            # and the globals?
+            # We should reset them at the beginning also...
+            print("synthetic")
+            print(new_args)
+            cat(ls.str(env))
+            trace <- tryCatch({
                 res <- do.call(name, new_args, envir = env) #pakg::name?
                 create_trace(name, pkg, args=new_args, globals=globals, retv=res, seed=seed)
             },
@@ -92,7 +91,9 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
             }, warning=function(e) {
                 create_trace(name, pkg, args=args, error=e, seed=seed,  globals=globals, synthetic=TRUE)
             })
-        store_trace(tracer, trace)
+            store_trace(tracer, trace)
+        }
+
     }
 }
 
