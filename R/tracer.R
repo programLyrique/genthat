@@ -19,6 +19,16 @@ store_trace <- function(tracer, trace) {
     UseMethod("store_trace")
 }
 
+#' @name Check existence of a trace
+#' @title Check if the trace would exist after the call
+#'
+#' @export
+#'
+has_trace <- function(tracer, fun, pkg=NULL, args=list(), globals=list()) {
+    UseMethod("has_trace")
+}
+
+
 #' @name Reset traces
 #' @title Clears the captured traces
 #'

@@ -12,7 +12,7 @@ store_trace.sequence_tracer <- function(tracer, trace) {
 
 #' @export
 #'
-has_trace.sequence_tracer <- function(tracer, trace) {
+has_trace.sequence_tracer <- function(tracer, fun, pkg=NULL, args=list(), globals=list()) {
   return(FALSE)
 }
 

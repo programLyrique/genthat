@@ -87,7 +87,7 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
             
             if(has_trace(tracer, name, new_args, globals)) {
                 log_debug("Trace already exists. Skipping call.")
-                continue
+                next
             }
             trace <- tryCatch({
                 res <- do.call(name, new_args, envir = env) #pkg::name?

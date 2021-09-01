@@ -59,7 +59,7 @@ has_trace.set_tracer <- function(tracer, fun, pkg=NULL, args=list(), globals=lis
     class(simple_trace) <- "genthat_trace"
     
     
-    ser <- serialize(trace_without_seed, connection=NULL, ascii=FALSE)
+    ser <- serialize(simple_trace, connection=NULL, ascii=FALSE)
     
     if (length(ser) > getOption("genthat.max_trace_size", .Machine$integer.max)) {
         trace <- create_trace(trace$fun, trace$pkg, skipped=length(ser))
