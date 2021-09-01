@@ -4,8 +4,11 @@
 \alias{link_environments}
 \title{Links the environments of the surrounding functions}
 \usage{
-link_environments(env = parent.frame(), parent = parent.env(env),
-  .fun_filter = is.local_closure)
+link_environments(
+  env = parent.frame(),
+  parent = parent.env(env),
+  .fun_filter = is.local_closure
+)
 }
 \arguments{
 \item{env}{the environment in which to look for functions}

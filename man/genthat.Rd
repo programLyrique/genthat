@@ -3,8 +3,4 @@
 \docType{package}
 \name{genthat}
 \alias{genthat}
-\alias{genthat-package}
 \title{genthat: A framework for unit tests generation}
-\description{
-genthat: A framework for unit tests generation
-}

@@ -4,9 +4,17 @@
 \alias{download_package}
 \title{Downloads R package}
 \usage{
-download_package(package, destdir, version = NULL,
-  repos = getOption("repos"), type = "source", extract = TRUE,
-  force = FALSE, quiet = TRUE, ...)
+download_package(
+  package,
+  destdir,
+  version = NULL,
+  repos = getOption("repos"),
+  type = "source",
+  extract = TRUE,
+  force = FALSE,
+  quiet = TRUE,
+  ...
+)
 }
 \description{
 Downloads R package.

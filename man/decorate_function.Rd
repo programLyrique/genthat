@@ -4,9 +4,13 @@
 \alias{decorate_function}
 \title{Decorates given functions}
 \usage{
-decorate_function(fun, name = substitute(fun),
+decorate_function(
+  fun,
+  name = substitute(fun),
   record_fun = substitute(genthat:::record_trace),
-  decorator = get_decorator(), env = parent.frame())
+  decorator = get_decorator(),
+  env = parent.frame()
+)
 }
 \arguments{
 \item{fun}{the function that shall be decorated}
