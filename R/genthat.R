@@ -46,7 +46,6 @@ gen_from_package <- function(pkgs_to_trace, pkgs_to_run=pkgs_to_trace,
                              prune_tests=FALSE,
                              quiet=TRUE,
                              ...) {
-
     if (prune_tests) {
         if (action != "generate") {
             stop("Test pruning only works with generate action")
@@ -316,6 +315,7 @@ trace_package <- function(pkgs, files_to_run,
             vars$stats_file <- stats_file
             vars$max_trace_size <- getOption("genthat.max_trace_size", .Machine$integer.max)
             vars$pkgs <- paste(pkgs, sep=",")
+            vars$synthetic <- getOption("genthat.synthetic", FALSE)
 
             # convert the variables to the expected format GENTHAT_<VAR>=<value>
             env <- sapply(names(vars), function(x) {

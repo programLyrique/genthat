@@ -61,16 +61,21 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
     }, warning=function(e) {
         create_trace(name, pkg, args=args, failure=e)
     })
+    
 
     store_trace(tracer, trace)
-
+    
+    
+    
     # Synthetic traces
     if(getOption("genthat.synthetic", default = FALSE)) {
+        log_debug("Synthetic traces")
         flags <- Filter(function(e) is.logical(e) && !is.na(e), args)
         # currently just each flag switched independently.
         # TODO: 2^slength(flags) to explore...
         new_args <- args
         for(flag_name in names(flags)) {
+            log_debug("Flipping flag: ", flag_name)
             new_args[[flag_name]] <- !args[[flag_name]]
             # Execute here the function with the new flags!
             # Quick and dirty: we should rather start it after, in a new try catch...
@@ -79,10 +84,14 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
             # What about the seed?
             # and the globals?
             # We should reset them at the beginning also...
-            cat(ls.str(env))
+            
+            if(has_trace(tracer, name, new_args, globals)) {
+                log_debug("Trace already exists. Skipping call.")
+                continue
+            }
             trace <- tryCatch({
-                res <- do.call(name, new_args, envir = env) #pakg::name?
-                create_trace(name, pkg, args=new_args, globals=globals, retv=res, seed=seed)
+                res <- do.call(name, new_args, envir = env) #pkg::name?
+                create_trace(name, pkg, args=new_args, globals=globals, retv=res, seed=seed, synthetic=TRUE)
             },
             error=function(e) {
                 create_trace(name, pkg, args=args, error=e, seed=seed,  globals=globals, synthetic=TRUE)# or failure?

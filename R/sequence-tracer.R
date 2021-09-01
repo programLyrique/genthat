@@ -12,6 +12,12 @@ store_trace.sequence_tracer <- function(tracer, trace) {
 
 #' @export
 #'
+has_trace.sequence_tracer <- function(tracer, trace) {
+  return(FALSE)
+}
+
+#' @export
+#'
 reset_traces.sequence_tracer <- function(tracer) {
     sequence_tracer_reset_traces(tracer)
 }

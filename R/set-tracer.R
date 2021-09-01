@@ -27,9 +27,12 @@ create_set_tracer <- function(session_file=NULL) {
 #' @export
 #'
 store_trace.set_tracer <- function(tracer, trace) {
-    # we need to compute the digest without the seed
+    # we need to compute the digest without the seed 
+    # and without the return value
     trace_without_seed <- trace
     trace_without_seed$seed <- NULL
+    trace_without_seed$retv <- NULL
+    attr(trace, "synthetic") <- NULL
 
     ser <- serialize(trace_without_seed, connection=NULL, ascii=FALSE)
 
@@ -46,6 +49,26 @@ store_trace.set_tracer <- function(tracer, trace) {
     }
 
     invisible(trace)
+}
+
+#' @export
+#'
+has_trace.set_tracer <- function(tracer, fun, pkg=NULL, args=list(), globals=list()) {
+    simple_trace <- list(fun=fun, pkg=pkg, args=as.list(args), globals=as.list(globals))
+    # no seed, to retv, no synthetic
+    class(simple_trace) <- "genthat_trace"
+    
+    
+    ser <- serialize(trace_without_seed, connection=NULL, ascii=FALSE)
+    
+    if (length(ser) > getOption("genthat.max_trace_size", .Machine$integer.max)) {
+        trace <- create_trace(trace$fun, trace$pkg, skipped=length(ser))
+        ser <- serialize(trace, connection=NULL, ascii=FALSE)
+    }
+    
+    key <- digest::digest(ser, algo="sha1", serialize=FALSE)
+    
+    return(!is.null(tracer$known_traces[[key]]))
 }
 
 #' @export
