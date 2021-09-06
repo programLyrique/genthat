@@ -355,7 +355,7 @@ trace_package <- function(pkgs, files_to_run,
     client_runs <- lapply(files_to_run, run_file)
     
     if(getOption("genthat.synthetic", FALSE)) {
-        log_debug
+        log_debug("Synthetic traces")
         synthetic_runs <- perform_synthetic_traces(tracer, set_tracer_session_file, run_file)
         c(client_runs, synthetic_runs)
     }else {

@@ -6,16 +6,15 @@ gen_call <- function(trace, format_code = TRUE) {
     call <- generate_call(trace, serializer)
     globals <- generate_globals(trace$globals, serializer)
     
-    if(!is.null(trace$seed)) {
-      header <- paste0(header, ".Random.seed <<- .ext.seed\n\n")
-    }
+    #if(!is.null(trace$seed)) {
+    #    header <- ".Random.seed <<- .ext.seed\n\n"
+    #}
     
     code <- paste0(
-      header,
       "{\n",
       globals,
       if (nchar(globals) > 0) '\n' else '',
-      calls, '\n',
+      call, '\n',
       "}\n\n"
     )
     
@@ -38,9 +37,10 @@ generate_synthetic_file <- function(tracer_type, session_file, run_i) {
       session_file=session_file
     )
   )
+  
   # Find out the prospective calls
   
-  synth_calls <- purrr::keep(tracer$known_calls, ~!is.logical(.))
+  synth_calls <- purrr::keep(as.list(tracer$known_traces), ~!is.logical(.))
   
   if(length(synth_calls) == 0) {
     return(NULL)
@@ -49,7 +49,7 @@ generate_synthetic_file <- function(tracer_type, session_file, run_i) {
   log_debug("Run synthetic file ", run_i, " with ", length(synth_calls), " new calls.")
   
   # Generate the file
-  script <- paste0("synthetic_", run_i)
+  script <- paste0("synthetic_", run_i, ".R")
   
   # Write the prospective synthetic calls in the file
   # We need also to set up the seed and the globals as needed 
@@ -68,7 +68,7 @@ perform_synthetic_traces <- function(tracer_type, session_file, run_file, max_ru
   runs <- list()
   repeat {
     synth_file <- generate_synthetic_file(tracer_type, session_file, i)
-    if(is.null(synth_file) || i < max_runs) {
+    if(is.null(synth_file) || i > max_runs) {
       log_debug("Last synthetic trace iteration: ", i)
       break
     }

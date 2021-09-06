@@ -51,6 +51,7 @@ store_trace.set_tracer <- function(tracer, trace) {
         tracer$traces[[key]] <- trace
     }
     else {
+        log_debug("Adding prospective call.")
         tracer$known_traces[[key]] <- trace
     }
 
