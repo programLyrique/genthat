@@ -87,10 +87,6 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
             # and the globals?
             # We should reset them at the beginning also...
             
-            if(has_trace(tracer, name, new_args, globals)) {
-                log_debug("Trace already exists. Skipping call.")
-                next
-            }
             trace <- tryCatch({
                 create_trace(name, pkg, args=new_args, globals=globals, seed=seed, synthetic=TRUE)
             },

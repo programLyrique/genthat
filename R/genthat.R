@@ -85,6 +85,7 @@ gen_from_package <- function(pkgs_to_trace, pkgs_to_run=pkgs_to_trace,
     )
 
     tracing <- lapply(1:length(tracing), function(i) {
+        browser()
         x <- tracing[[i]]
 
         if (length(x) == 1 && (is.numeric(x) || is.character(x))) {
@@ -356,7 +357,7 @@ trace_package <- function(pkgs, files_to_run,
     
     if(getOption("genthat.synthetic", FALSE)) {
         log_debug("Synthetic traces")
-        synthetic_runs <- perform_synthetic_traces(tracer, set_tracer_session_file, run_file)
+        synthetic_runs <- perform_synthetic_traces(tracer, set_tracer_session_file, output_dir, run_file)
         c(client_runs, synthetic_runs)
     }else {
         client_runs

@@ -50,7 +50,7 @@ store_trace.set_tracer <- function(tracer, trace) {
         tracer$known_traces[[key]] <- TRUE
         tracer$traces[[key]] <- trace
     }
-    else {
+    else if(attr(trace, "synthetic") && is.null(tracer$known_traces[[key]])) {
         log_debug("Adding prospective call.")
         tracer$known_traces[[key]] <- trace
     }
@@ -75,7 +75,9 @@ has_trace.set_tracer <- function(tracer, fun, pkg=NULL, args=list(), globals=lis
     
     key <- digest::digest(ser, algo="sha1", serialize=FALSE)
     
-    return(!is.null(tracer$known_traces[[key]]))
+    value <- tracer$known_traces[[key]]
+    
+    return(!is.null(value) && is.logical(value))
 }
 
 #' @export

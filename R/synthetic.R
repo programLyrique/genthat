@@ -28,7 +28,7 @@ gen_call <- function(trace, format_code = TRUE) {
   })
 }
 
-generate_synthetic_file <- function(tracer_type, session_file, run_i) {
+generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i) {
   stopifnot(tracer_type == "set")
   
   tracer <- genthat::set_tracer(
@@ -39,23 +39,35 @@ generate_synthetic_file <- function(tracer_type, session_file, run_i) {
   )
   
   # Find out the prospective calls
-  
-  synth_calls <- purrr::keep(as.list(tracer$known_traces), ~!is.logical(.))
-  
+    synth_calls <- purrr::keep(as.list(tracer$known_traces), ~!is.logical(.))
+    
   if(length(synth_calls) == 0) {
     return(NULL)
   }
   
+  stopifnot(all(lapply(synth_calls, function(x) attr(x, "synthetic"))))
+  
+  # # Should not be needed theoretically
+  # for(call in ls(tracer$known_traces)) {
+  #   if(!is.logical(tracer$known_traces[[call]])) {
+  #     tracer$known_traces[[call]] <- NULL
+  #   }
+  # }
+  # saveRDS(tracer$known_traces, tracer$session_file)
+  
+  
   log_debug("Run synthetic file ", run_i, " with ", length(synth_calls), " new calls.")
   
   # Generate the file
-  script <- paste0("synthetic_", run_i, ".R")
+  script <- file.path(output_dir, paste0("synthetic_", run_i, ".R"))
+  
+  file_script <- file(script, open = "w+")# truncate any existing file
   
   # Write the prospective synthetic calls in the file
   # We need also to set up the seed and the globals as needed 
   
   for(call in synth_calls) {
-    write(gen_call(call), file = script, append = TRUE)
+    write(gen_call(call), file = file_script, append = TRUE)
   }
   
   return(script)
@@ -63,12 +75,12 @@ generate_synthetic_file <- function(tracer_type, session_file, run_i) {
 
 #' @export
 #'
-perform_synthetic_traces <- function(tracer_type, session_file, run_file, max_runs = 10) {
+perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_file, max_runs = 3) {
   i <- 1
   runs <- list()
   repeat {
-    synth_file <- generate_synthetic_file(tracer_type, session_file, i)
-    if(is.null(synth_file) || i > max_runs) {
+    synth_file <- generate_synthetic_file(tracer_type, session_file, output_dir, i)
+    if(is.null(synth_file) || i >= max_runs) {
       log_debug("Last synthetic trace iteration: ", i)
       break
     }
