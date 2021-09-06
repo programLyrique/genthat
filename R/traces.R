@@ -21,7 +21,10 @@ create_trace <- function(fun, pkg=NULL, args=list(), globals=list(), retv, seed,
     } else if (skipped > 0) {
         trace$skipped <- skipped
         class(trace) <- "genthat_trace_skipped"
-    } else {
+    } else if(synthetic) {
+        class(trace) <- "genthat_trace" # or maybe its own class?
+    } 
+    else {
         class(trace) <- "genthat_trace_entry"
     }
 

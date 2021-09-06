@@ -426,7 +426,7 @@ is_base_env <- function(env) {
 log_debug <- function(...) {
     if (is_debug_enabled()) {
         msg <- paste0(...)
-        cat(msg, "\n")
+        cat(msg, file= stderr(),  "\n")
     }
 }
 

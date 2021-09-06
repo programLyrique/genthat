@@ -60,7 +60,7 @@ run_r_script <- function(script_file,
     stdout <- FALSE
     stderr <- FALSE
     if (!quiet || is_debug_enabled()) {
-        if(quiet) stdout <- ""
+        if(!quiet) stdout <- ""
         stderr <- ""
 
         log_debug(

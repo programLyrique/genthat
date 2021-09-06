@@ -32,7 +32,7 @@ store_trace.set_tracer <- function(tracer, trace) {
     trace_without_seed <- trace
     trace_without_seed$seed <- NULL
     trace_without_seed$retv <- NULL
-    attr(trace, "synthetic") <- NULL
+    attr(trace_without_seed, "synthetic") <- NULL
 
     ser <- serialize(trace_without_seed, connection=NULL, ascii=FALSE)
 
@@ -43,9 +43,15 @@ store_trace.set_tracer <- function(tracer, trace) {
 
     key <- digest::digest(ser, algo="sha1", serialize=FALSE)
 
-    if (is.null(tracer$known_traces[[key]])) {
+    if (!attr(trace, "synthetic") && (is.null(tracer$known_traces[[key]]) || !is.logical(tracer$known_traces[[key]]))) {
+        if(!is.null(tracer$known_traces[[key]]) && !is.logical(tracer$known_traces[[key]])) {
+            log_debug("A prospective synthetic call was hit in the client code.")
+        }
         tracer$known_traces[[key]] <- TRUE
         tracer$traces[[key]] <- trace
+    }
+    else {
+        tracer$known_traces[[key]] <- trace
     }
 
     invisible(trace)

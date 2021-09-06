@@ -352,7 +352,15 @@ trace_package <- function(pkgs, files_to_run,
     }
 
     log_debug("Running ", length(files_to_run), " files")
-    lapply(files_to_run, run_file)
+    client_runs <- lapply(files_to_run, run_file)
+    
+    if(getOption("genthat.synthetic", FALSE)) {
+        log_debug
+        synthetic_runs <- perform_synthetic_traces(tracer, set_tracer_session_file, run_file)
+        c(client_runs, synthetic_runs)
+    }else {
+        client_runs
+    }
 }
 
 save_trace_file <- function(trace, output_dir, name) {

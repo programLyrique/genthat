@@ -69,8 +69,10 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
     
     # Synthetic traces
     if(getOption("genthat.synthetic", default = FALSE)) {
-        log_debug("Synthetic traces")
         flags <- Filter(function(e) is.logical(e) && !is.na(e), args)
+        if(length(flags) > 0) {
+            log_debug("Synthetic traces for ", name)
+        }
         # currently just each flag switched independently.
         # TODO: 2^slength(flags) to explore...
         new_args <- args
@@ -90,13 +92,13 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
                 next
             }
             trace <- tryCatch({
-                res <- do.call(name, new_args, envir = env) #pkg::name?
-                create_trace(name, pkg, args=new_args, globals=globals, retv=res, seed=seed, synthetic=TRUE)
+                create_trace(name, pkg, args=new_args, globals=globals, seed=seed, synthetic=TRUE)
             },
-            error=function(e) {
-                create_trace(name, pkg, args=args, error=e, seed=seed,  globals=globals, synthetic=TRUE)# or failure?
+            error = function(e) {
+            # Is that useful? We should probably not execute it anyway.
+                create_trace(name, pkg, args=args, failure=e, seed=seed,  globals=globals, synthetic=TRUE)
             }, warning=function(e) {
-                create_trace(name, pkg, args=args, error=e, seed=seed,  globals=globals, synthetic=TRUE)
+                create_trace(name, pkg, args=args, failure=e, seed=seed,  globals=globals, synthetic=TRUE)
             })
             store_trace(tracer, trace)
         }
