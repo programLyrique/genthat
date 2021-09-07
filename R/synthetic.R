@@ -78,7 +78,7 @@ perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_
         log_debug("No synthetic runs have been performed.")
       }
       else {
-        log_debug("Total number of synthetic runs: ", i - 1)
+        log_debug("Total number of synthetic runs: ", if(i == max_runs) i else i - 1)
       }
       break
     }
