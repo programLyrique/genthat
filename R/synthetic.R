@@ -39,21 +39,13 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
   )
   
   # Find out the prospective calls
-    synth_calls <- purrr::keep(as.list(tracer$known_traces), ~!is.logical(.))
+  synth_calls <- purrr::keep(as.list(tracer$known_traces), ~!is.logical(.))
     
   if(length(synth_calls) == 0) {
     return(NULL)
   }
   
-  stopifnot(all(lapply(synth_calls, function(x) attr(x, "synthetic"))))
-  
-  # # Should not be needed theoretically
-  # for(call in ls(tracer$known_traces)) {
-  #   if(!is.logical(tracer$known_traces[[call]])) {
-  #     tracer$known_traces[[call]] <- NULL
-  #   }
-  # }
-  # saveRDS(tracer$known_traces, tracer$session_file)
+  stopifnot(all(vapply(synth_calls, function(x) attr(x, "synthetic"), TRUE)))
   
   
   log_debug("Run synthetic file ", run_i, " with ", length(synth_calls), " new calls.")
@@ -77,7 +69,8 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
 #'
 perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_file, max_runs = 3) {
   i <- 1
-  runs <- list()
+  runs <- data.frame(output=character(),
+                     error=character())
   repeat {
     synth_file <- generate_synthetic_file(tracer_type, session_file, output_dir, i)
     if(is.null(synth_file) || i >= max_runs) {
@@ -85,7 +78,10 @@ perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_
       break
     }
     run <- run_file(synth_file)
-    runs <- c(runs, run)
+    runs <- rbind(runs, run)
+    if(!is_debug_enabled() && !is.null(synth_file)) {
+      file.remove(synth_file)
+    }
     i <- i + 1
   }
   #TODO: return some metadata, such as the number of runs before stopping

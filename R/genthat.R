@@ -71,7 +71,7 @@ gen_from_package <- function(pkgs_to_trace, pkgs_to_run=pkgs_to_trace,
     working_dir <- tempfile(pattern="genthat-gen_from_package")
     files <- lapply(pkgs_to_run, extract_package_code, types=types, output_dir=working_dir, filter=filter)
     files <- unlist(files)
-
+    
     if (length(files) == 0) {
         return(data.frame(file=character(), output=character(),  error=character()))
     }
@@ -83,9 +83,8 @@ gen_from_package <- function(pkgs_to_trace, pkgs_to_run=pkgs_to_trace,
         quiet=quiet,
         ...
     )
-
+    
     tracing <- lapply(1:length(tracing), function(i) {
-        browser()
         x <- tracing[[i]]
 
         if (length(x) == 1 && (is.numeric(x) || is.character(x))) {
@@ -354,11 +353,15 @@ trace_package <- function(pkgs, files_to_run,
 
     log_debug("Running ", length(files_to_run), " files")
     client_runs <- lapply(files_to_run, run_file)
-    
+
     if(getOption("genthat.synthetic", FALSE)) {
         log_debug("Synthetic traces")
         synthetic_runs <- perform_synthetic_traces(tracer, set_tracer_session_file, output_dir, run_file)
-        c(client_runs, synthetic_runs)
+        runs <- rbind(client_runs[[1]], synthetic_runs) #client_runs is named ("tests" or something from types, usually)
+        # then we put the name back
+        l <- list()
+        l[[names(client_runs)]] <- runs
+        l
     }else {
         client_runs
     }
