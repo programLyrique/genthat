@@ -352,19 +352,15 @@ trace_package <- function(pkgs, files_to_run,
     }
 
     log_debug("Running ", length(files_to_run), " files")
-    client_runs <- lapply(files_to_run, run_file)
-
+    runs <- lapply(files_to_run, run_file)
+    
     if(getOption("genthat.synthetic", FALSE)) {
         log_debug("Synthetic traces")
         synthetic_runs <- perform_synthetic_traces(tracer, set_tracer_session_file, output_dir, run_file)
-        runs <- rbind(client_runs[[1]], synthetic_runs) #client_runs is named ("tests" or something from types, usually)
-        # then we put the name back
-        l <- list()
-        l[[names(client_runs)]] <- runs
-        l
-    }else {
-        client_runs
+        runs$synthetic <- synthetic_runs
+        
     }
+    runs
 }
 
 save_trace_file <- function(trace, output_dir, name) {

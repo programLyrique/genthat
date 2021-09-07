@@ -67,14 +67,19 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
 
 #' @export
 #'
-perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_file, max_runs = 3) {
+perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_file, max_runs = 10) {
   i <- 1
   runs <- data.frame(output=character(),
                      error=character())
   repeat {
     synth_file <- generate_synthetic_file(tracer_type, session_file, output_dir, i)
     if(is.null(synth_file) || i >= max_runs) {
-      log_debug("Last synthetic trace iteration: ", i)
+      if(i == 1) {
+        log_debug("No synthetic runs have been performed.")
+      }
+      else {
+        log_debug("Total number of synthetic runs: ", i - 1)
+      }
       break
     }
     run <- run_file(synth_file)
