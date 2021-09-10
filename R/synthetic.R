@@ -1,7 +1,8 @@
 #' @export
 #'
-gen_call <- function(trace, format_code = TRUE) {
+gen_call <- function(trace, external_file = "", format_code = TRUE) {
   tryCatch({
+    externals <- new.env(parent=emptyenv())
     serializer <- new(Serializer)
     call <- generate_call(trace, serializer)
     globals <- generate_globals(trace$globals, serializer)
@@ -10,8 +11,19 @@ gen_call <- function(trace, format_code = TRUE) {
     #    header <- ".Random.seed <<- .ext.seed\n\n"
     #}
     
+    # Gather the externals in an environment
+    serializer$externals(externals)
+    header <- ""
+    if (length(externals) > 0) {
+      fname_ext <- paste0(tools::file_path_sans_ext(external_file), "-", escape_name(trace$fun), ".ext")
+      saveRDS(externals, fname_ext)
+      header <- paste0("env <- readRDS(\"", fname_ext, "\")\nparent.env(env) <- globalenv()\nenvironment() <- env")
+    }
+    
     code <- paste0(
       "{\n",
+      header,
+      if (nchar(header) > 0) '\n' else '',
       globals,
       if (nchar(globals) > 0) '\n' else '',
       call, '\n',
@@ -59,7 +71,8 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
   # We need also to set up the seed and the globals as needed 
   
   for(call in synth_calls) {
-    write(gen_call(call), file = file_script, append = TRUE)
+    code <- gen_call(call, script)
+    write(code, file = file_script, append = TRUE)
   }
   
   return(script)
