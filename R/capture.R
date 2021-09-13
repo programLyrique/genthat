@@ -1,6 +1,6 @@
 # Default function entry decorator.
 # Creates the trace record and stores it into the trace vector.
-record_trace <- function(name, pkg=NULL, args, retv, error, seed,
+record_trace <- function(name, pkg=NULL, args, default_args, missing_args, retv, error, seed,
                         env=parent.frame(), tracer=get_tracer()) {
 
     # TODO: (performance) all this makes sense only if there are symbols anywhere in args
@@ -65,17 +65,21 @@ record_trace <- function(name, pkg=NULL, args, retv, error, seed,
 
     store_trace(tracer, trace)
     
-    
+    print(name, "; args = ", args, "; default args = ", default_args, "; missing args = ", "TODO", "\n")
     
     # Synthetic traces
     if(getOption("genthat.synthetic", default = FALSE)) {
-        flags <- Filter(function(e) is.logical(e) && !is.na(e), args)
+        flags <- Filter(function(e) is.logical(e) && !is.na(e), union(args, default_args))
+        if(name == "bin_data") {
+            print(name, "; args = ", args, "; default args = ", default_args, "; missing args = ", "TODO", "\n")
+            print("Flags are: ", flags)
+        }
         if(length(flags) > 0) {
             log_debug("Synthetic traces for ", name)
         }
         # currently just each flag switched independently.
         # TODO: 2^slength(flags) to explore...
-        new_args <- args
+        new_args <- flags
         for(flag_name in names(flags)) {
             log_debug("Flipping flag: ", flag_name)
             new_args[[flag_name]] <- !args[[flag_name]]

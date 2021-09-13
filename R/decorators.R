@@ -197,10 +197,14 @@ decorate_with_on.exit <- function(fun, name, pkg, record_fun) {
                     default <- genthat:::`__genthat_default_retv`
                     retv <- returnValue(default=default)
                     if (!identical(retv, default) && !genthat:::is_exception_returnValue(retv)) {
+                        `genthat_function_args` <- as.list(match.call())[-1]
+                        `genthat_formal_args` <- as.list(formals())
                         RECORD_FUN(
                             name=NAME,
                             pkg=PKG,
-                            args=as.list(match.call())[-1],
+                            args=`genthat_function_args`,
+                            default_args = genthat:::get_default_arguments(`genthat_function_args`, `genthat_formal_args`),
+                            missing_args = genthat:::get_missing_arguments(`genthat_function_args`, `genthat_formal_args`),
                             retv=retv,
                             seed=`__genthat_captured_seed`,
                             env=parent.frame()

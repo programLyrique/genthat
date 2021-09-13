@@ -464,3 +464,31 @@ compute_coverage <- function(...) {
     # compute the percentage
     (sum(coverage_df$value > 0) / length(coverage_df$value)) * 100
 }
+
+
+#' @title Gets the arguments of the function that use their default argument
+#' 
+#' Such an argument is part of the formal parameter list, with a default alue, but is not
+#' specified in the call.
+#' 
+#' It means it has a value in the local environment but is considered to be missing.
+#' 
+#' @export
+#' 
+get_default_arguments <- function(call, formal_args) {
+  
+  # rlang:;as_name extracts the character string of the symbol. d <- quote(b) ; as_name(d) ==> "b"
+  formal_defaults <- Filter(function(arg) !is.symbol(arg) || rlang::as_name(arg) != "", formal_args)
+  return(call[setdiff(names(formal_defaults), names(call))])
+}
+
+
+#' @title Gets the argument of the function that are missing
+#' 
+#' It includes arguments with default values, but not provided explicitly
+#' 
+#' @export
+#' 
+get_missing_arguments <- function(call, formal_args) {
+  return(formal_args[setdiff(names(formal_args), names(call))])
+}

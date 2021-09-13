@@ -16,6 +16,8 @@ gen_call <- function(trace, external_file = "", format_code = TRUE) {
     header <- ""
     if (length(externals) > 0) {
       fname_ext <- paste0(tools::file_path_sans_ext(external_file), "-", escape_name(trace$fun), ".ext")
+      # TODO: it might be generated several times with the same name if the same function is tested
+      
       saveRDS(externals, fname_ext)
       header <- paste0("env <- readRDS(\"", fname_ext, "\")\nparent.env(env) <- globalenv()\nenvironment() <- env")
     }
