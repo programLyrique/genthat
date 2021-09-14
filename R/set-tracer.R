@@ -18,6 +18,7 @@ create_set_tracer <- function(session_file=NULL) {
         list(
             traces=new.env(parent=emptyenv(), hash=TRUE),
             known_traces=known_traces,
+            traced_functions=new.env(parent=emptyenv(), hash = TRUE),
             session_file=session_file
         ),
         class="set_tracer"
@@ -49,6 +50,7 @@ store_trace.set_tracer <- function(tracer, trace) {
         }
         tracer$known_traces[[key]] <- TRUE
         tracer$traces[[key]] <- trace
+        tracer$traced_functions[[trace$fun]] <- get0(trace$fun, tracer$traced_functions, ifnotfound = 0) + 1
     }
     else if(attr(trace, "synthetic") && is.null(tracer$known_traces[[key]])) {
         log_debug("Adding prospective call.")
@@ -56,6 +58,12 @@ store_trace.set_tracer <- function(tracer, trace) {
     }
 
     invisible(trace)
+}
+
+#' @export
+#'
+function_count.set_tracer <- function(tracer, fun) {
+    return(get0(fun, tracer$traced_functions, ifnotfound=0))
 }
 
 #' @export
@@ -85,6 +93,7 @@ has_trace.set_tracer <- function(tracer, fun, pkg=NULL, args=list(), globals=lis
 reset_traces.set_tracer <- function(tracer) {
     rm(list=ls(envir=tracer$known_traces, sort=FALSE, all.names=TRUE), envir=tracer$known_traces)
     rm(list=ls(envir=tracer$traces, sort=FALSE, all.names=TRUE), envir=tracer$traces)
+    rm(list=ls(envir=tracer$traced_functions, sort=FALSE, all.names=TRUE), envir=tracer$traced_functions)
 }
 
 #' @export

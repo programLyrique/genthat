@@ -12,6 +12,13 @@ store_trace.sequence_tracer <- function(tracer, trace) {
 
 #' @export
 #'
+function_count.sequence_tracer <- function(tracer, fun) {
+  return(0)
+}
+
+
+#' @export
+#'
 has_trace.sequence_tracer <- function(tracer, fun, pkg=NULL, args=list(), globals=list()) {
   return(FALSE)
 }

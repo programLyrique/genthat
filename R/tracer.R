@@ -28,6 +28,14 @@ has_trace <- function(tracer, fun, pkg=NULL, args=list(), globals=list()) {
     UseMethod("has_trace")
 }
 
+#' @name Cound of the function name
+#' @title How many times we have already seen the function (with any arguments)
+#'
+#' @export
+#'
+function_count <- function(tracer, fun) {
+    UseMethod("function_count")
+}
 
 #' @name Reset traces
 #' @title Clears the captured traces
