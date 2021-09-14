@@ -88,7 +88,7 @@ record_trace <- function(name, pkg=NULL, args, default_args, missing_args, retv,
         # TODO: 2^slength(flags) to explore...
         new_args <- args
         for(flag_name in names(flags)) {
-            log_debug("Flipping flag: ")
+            log_debug("Flipping flag: ", flag_name)
             new_args[[flag_name]] <- !flags[[flag_name]]
             # Execute here the function with the new flags!
             # Quick and dirty: we should rather start it after, in a new try catch...

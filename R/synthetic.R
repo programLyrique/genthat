@@ -71,8 +71,11 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
   
   file_script <- file(script, open = "w+")# truncate any existing file
   
+  # HACK
+  # inject magrittr %>%
+  #write("`%>%` <- magrittr::`%>%`\n\n", file = file_script, append = TRUE)
+  
   # Write the prospective synthetic calls in the file
-  # We need also to set up the seed and the globals as needed 
   
   for(call_hash in names(synth_calls)) {
     code <- gen_call(synth_calls[[call_hash]], call_hash, script)
