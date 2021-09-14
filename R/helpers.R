@@ -182,6 +182,10 @@ is.local_closure <- function(f) {
     is.closure(f) && is.null(get_package_name(environment(f)))
 }
 
+named_list_to_str <- function(l) {
+  paste(names(l), l, sep="=", collapse=", ")
+}
+
 #' @importFrom methods getPackageName
 #'
 get_package_name <- function(env) {
@@ -479,7 +483,7 @@ get_default_arguments <- function(call, formal_args) {
   
   # rlang:;as_name extracts the character string of the symbol. d <- quote(b) ; as_name(d) ==> "b"
   formal_defaults <- Filter(function(arg) !is.symbol(arg) || rlang::as_name(arg) != "", formal_args)
-  return(call[setdiff(names(formal_defaults), names(call))])
+  return(formal_defaults[setdiff(names(formal_defaults), names(call))])
 }
 
 

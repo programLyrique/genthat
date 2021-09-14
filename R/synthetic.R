@@ -1,6 +1,6 @@
 #' @export
 #'
-gen_call <- function(trace, external_file = "", format_code = TRUE) {
+gen_call <- function(trace, call_hash, external_file = "", format_code = TRUE) {
   tryCatch({
     externals <- new.env(parent=emptyenv())
     serializer <- new(Serializer)
@@ -15,21 +15,23 @@ gen_call <- function(trace, external_file = "", format_code = TRUE) {
     serializer$externals(externals)
     header <- ""
     if (length(externals) > 0) {
-      fname_ext <- paste0(tools::file_path_sans_ext(external_file), "-", escape_name(trace$fun), ".ext")
-      # TODO: it might be generated several times with the same name if the same function is tested
+      # We add the hash to differentiate different invokations of the same function
+      fname_ext <- paste0(tools::file_path_sans_ext(external_file), "-", escape_name(trace$fun), "-", call_hash, ".ext")
       
       saveRDS(externals, fname_ext)
-      header <- paste0("env <- readRDS(\"", fname_ext, "\")\nparent.env(env) <- globalenv()\nenvironment() <- env")
+      header <- paste0("env <- readRDS(\"", fname_ext, "\")\nparent.env(env) <- environment()\nlocal(")
     }
     
     code <- paste0(
-      "{\n",
       header,
       if (nchar(header) > 0) '\n' else '',
+      "{\n",
       globals,
       if (nchar(globals) > 0) '\n' else '',
-      call, '\n',
-      "}\n\n"
+      call, 
+      "\n}",
+      if (nchar(header) > 0) ', envir = env)' else '',
+      "\n\n"
     )
     
     if(format_code) {
@@ -72,8 +74,8 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
   # Write the prospective synthetic calls in the file
   # We need also to set up the seed and the globals as needed 
   
-  for(call in synth_calls) {
-    code <- gen_call(call, script)
+  for(call_hash in names(synth_calls)) {
+    code <- gen_call(synth_calls[[call_hash]], call_hash, script)
     write(code, file = file_script, append = TRUE)
   }
   

@@ -62,27 +62,34 @@ record_trace <- function(name, pkg=NULL, args, default_args, missing_args, retv,
         create_trace(name, pkg, args=args, failure=e)
     })
     
-
+    # We stop recording if we see a function name more than 100 times
+    # it's probably because one function is called with various numeric arguments
+    # because it is in a loop of another function
+    # Note that the function counter is not saved across files so it will be 
+    # 100 times max per test/vignette/example file
+    if(function_count(tracer, name) > 100) {
+        return()
+    }
+    
     store_trace(tracer, trace)
     
-    print(name, "; args = ", args, "; default args = ", default_args, "; missing args = ", "TODO", "\n")
+    
     
     # Synthetic traces
     if(getOption("genthat.synthetic", default = FALSE)) {
-        flags <- Filter(function(e) is.logical(e) && !is.na(e), union(args, default_args))
-        if(name == "bin_data") {
-            print(name, "; args = ", args, "; default args = ", default_args, "; missing args = ", "TODO", "\n")
-            print("Flags are: ", flags)
-        }
+        flags <- Filter(function(e) is.logical(e) && !is.na(e), c(args, default_args))
         if(length(flags) > 0) {
             log_debug("Synthetic traces for ", name)
+            log_debug(name, "; args: ", named_list_to_str(args), "; default args: ", named_list_to_str(default_args) ,
+                      "; missing args: ", named_list_to_str(missing_args))
+            log_debug("Flags are: ", named_list_to_str(flags))
         }
         # currently just each flag switched independently.
         # TODO: 2^slength(flags) to explore...
-        new_args <- flags
+        new_args <- args
         for(flag_name in names(flags)) {
-            log_debug("Flipping flag: ", flag_name)
-            new_args[[flag_name]] <- !args[[flag_name]]
+            log_debug("Flipping flag: ")
+            new_args[[flag_name]] <- !flags[[flag_name]]
             # Execute here the function with the new flags!
             # Quick and dirty: we should rather start it after, in a new try catch...
             # We do not go for a recursive call to record trace
