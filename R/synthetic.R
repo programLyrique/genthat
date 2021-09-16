@@ -22,14 +22,17 @@ gen_call <- function(trace, call_hash, external_file = "", format_code = TRUE) {
       header <- paste0("env <- readRDS(\"", fname_ext, "\")\nparent.env(env) <- environment()\nlocal(")
     }
     
+    # TODO: capture the errors in order to show for which function parameters things fail!
+    
     code <- paste0(
       header,
       if (nchar(header) > 0) '\n' else '',
-      "{\n",
+      "try({\n", # try otherwise any error will stop further processing of the synthetic call file
       globals,
       if (nchar(globals) > 0) '\n' else '',
+      "`%>%` <- magrittr::`%>%`\n", # hack 
       call, 
-      "\n}",
+      "\n})",
       if (nchar(header) > 0) ', envir = env)' else '',
       "\n\n"
     )
@@ -64,6 +67,7 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
   stopifnot(all(vapply(synth_calls, function(x) attr(x, "synthetic"), TRUE)))
   
   
+  
   log_debug("Run synthetic file ", run_i, " with ", length(synth_calls), " new calls.")
   
   # Generate the file
@@ -87,7 +91,7 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
 
 #' @export
 #'
-perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_file, max_runs = 10) {
+perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_file, max_runs = 5) {
   i <- 1
   runs <- data.frame(output=character(),
                      error=character())

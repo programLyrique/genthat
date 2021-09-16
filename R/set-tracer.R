@@ -56,6 +56,25 @@ store_trace.set_tracer <- function(tracer, trace) {
         log_debug("Adding prospective call.")
         tracer$known_traces[[key]] <- trace
     }
+    
+    if (class(trace) %in% c("genthat_trace_error", "genthat_trace_failure")) {
+        # try to see if it is a failed or errored call
+        class(trace_without_seed) <- "genthat_trace"
+        ser <- serialize(trace_without_seed, connection=NULL, ascii=FALSE)
+        if (length(ser) > getOption("genthat.max_trace_size", .Machine$integer.max)) {
+            trace <- create_trace(trace$fun, trace$pkg, skipped=length(ser))
+            ser <- serialize(trace, connection=NULL, ascii=FALSE)
+        }
+        
+        key <- digest::digest(ser, algo="sha1", serialize=FALSE)
+        
+        # if there is a prospective call with that, "remove" it
+        trace_witness <- tracer$known_traces[[key]]
+        if(!is.null(trace_witness) && !is.logical(trace_witness)) {
+            # Still a logical so that it is not added back
+            tracer$known_traces[[key]] <- FALSE 
+        }
+    }
 
     invisible(trace)
 }
