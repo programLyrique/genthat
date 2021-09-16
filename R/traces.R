@@ -13,6 +13,7 @@ create_trace <- function(fun, pkg=NULL, args=list(), globals=list(), retv, seed,
         trace$retv <- retv
         class(trace) <- "genthat_trace"
     } else if (!missing(error)) {
+        log_debug("Just saw an error after calling ", fun)
         trace$error <- error
         class(trace) <- "genthat_trace_error"
     } else if (!missing(failure)) {
@@ -21,9 +22,10 @@ create_trace <- function(fun, pkg=NULL, args=list(), globals=list(), retv, seed,
     } else if (skipped > 0) {
         trace$skipped <- skipped
         class(trace) <- "genthat_trace_skipped"
-    } else if(synthetic) {
-        class(trace) <- "genthat_trace" # or maybe its own class?
     } 
+    else if(synthetic) {
+        class(trace) <- "genthat_trace"
+    }
     else {
         class(trace) <- "genthat_trace_entry"
     }

@@ -196,9 +196,9 @@ decorate_with_on.exit <- function(fun, name, pkg, record_fun) {
                     .Internal(options(genthat.tracing=FALSE))
                     default <- genthat:::`__genthat_default_retv`
                     retv <- returnValue(default=default)
+                    `genthat_function_args` <- as.list(match.call())[-1]
+                    `genthat_formal_args` <- as.list(formals())
                     if (!identical(retv, default) && !genthat:::is_exception_returnValue(retv)) {
-                        `genthat_function_args` <- as.list(match.call())[-1]
-                        `genthat_formal_args` <- as.list(formals())
                         RECORD_FUN(
                             name=NAME,
                             pkg=PKG,
@@ -209,6 +209,18 @@ decorate_with_on.exit <- function(fun, name, pkg, record_fun) {
                             seed=`__genthat_captured_seed`,
                             env=parent.frame()
                         )
+                    }
+                    else { # that was an error
+                            RECORD_FUN(
+                                name=NAME,
+                                pkg=PKG,
+                                args=`genthat_function_args`,
+                                default_args = genthat:::get_default_arguments(`genthat_function_args`, `genthat_formal_args`),
+                                missing_args = genthat:::get_missing_arguments(`genthat_function_args`, `genthat_formal_args`),
+                                error=retv,
+                                seed=`__genthat_captured_seed`,
+                                env=parent.frame()
+                            )
                     }
 
                     .Internal(options(genthat.tracing=TRUE))

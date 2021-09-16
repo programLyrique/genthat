@@ -109,6 +109,7 @@ perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_
     run <- run_file(synth_file)
     runs <- rbind(runs, run)
     if(!is_debug_enabled() && !is.null(synth_file)) {
+      # that won't remove the last one...
       file.remove(synth_file)
     }
     i <- i + 1
@@ -116,3 +117,4 @@ perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_
   #TODO: return some metadata, such as the number of runs before stopping
   runs
 }
+

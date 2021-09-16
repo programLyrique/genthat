@@ -53,12 +53,17 @@ store_trace.set_tracer <- function(tracer, trace) {
         tracer$traced_functions[[trace$fun]] <- get0(trace$fun, tracer$traced_functions, ifnotfound = 0) + 1
     }
     else if(attr(trace, "synthetic") && is.null(tracer$known_traces[[key]])) {
-        log_debug("Adding prospective call.")
+        log_debug("Adding prospective call for ", trace$fun)
         tracer$known_traces[[key]] <- trace
     }
     
+    # That should not happen with synthetic traces (by construction)
+    # try to see if it is a failed or errored call
     if (class(trace) %in% c("genthat_trace_error", "genthat_trace_failure")) {
-        # try to see if it is a failed or errored call
+        log_debug("Intercepted an error for ", trace$fun)
+        
+        # look if there is a corresponding prospective call
+        trace_without_seed$error <- NULL
         class(trace_without_seed) <- "genthat_trace"
         ser <- serialize(trace_without_seed, connection=NULL, ascii=FALSE)
         if (length(ser) > getOption("genthat.max_trace_size", .Machine$integer.max)) {
@@ -71,6 +76,7 @@ store_trace.set_tracer <- function(tracer, trace) {
         # if there is a prospective call with that, "remove" it
         trace_witness <- tracer$known_traces[[key]]
         if(!is.null(trace_witness) && !is.logical(trace_witness)) {
+            log_debug("Just removed a failing prospective call")
             # Still a logical so that it is not added back
             tracer$known_traces[[key]] <- FALSE 
         }
