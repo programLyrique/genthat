@@ -13,7 +13,6 @@ create_trace <- function(fun, pkg=NULL, args=list(), globals=list(), retv, seed,
         trace$retv <- retv
         class(trace) <- "genthat_trace"
     } else if (!missing(error)) {
-        log_debug("Just saw an error after calling ", fun)
         trace$error <- error
         class(trace) <- "genthat_trace_error"
     } else if (!missing(failure)) {

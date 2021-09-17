@@ -68,6 +68,7 @@ record_trace <- function(name, pkg=NULL, args, default_args, missing_args, retv,
     # Note that the function counter is not saved across files so it will be 
     # 100 times max per test/vignette/example file
     if(function_count(tracer, name) > 100) {
+        log_debug("Seeing ", name, " too much!")
         return()
     }
     
