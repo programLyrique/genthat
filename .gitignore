@@ -53,3 +53,5 @@ generated_tests
 tmp
 .Rproj.user
 /.gdb_history
+
+analysis/*.csv

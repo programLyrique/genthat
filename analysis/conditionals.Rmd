@@ -1,0 +1,196 @@
+---
+title: "Conditionals in R"
+author: "Pierre Donat-Bouillud"
+output:
+  html_document:
+        gallery: false
+        toc: true
+        toc_depth: 3
+        toc_float: true
+        df_print: paged
+date: "`r Sys.Date()`"
+editor_options: 
+  chunk_output_type: console
+params:
+  base_dir: ./
+---
+
+```{r setup, include=FALSE}
+knitr::knit_hooks$set(time_it = local({
+  now <- NULL
+  function(before, options) {
+    if (before) { # record the current time before each chunk
+      now <<- Sys.time()
+    } else { # calculate the time difference after a chunk
+      res <- difftime(Sys.time(), now)
+      # return a character string to show the time
+      paste("Time for this code chunk to run:", res, units(res))
+    }
+  }
+}))
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  fig.align = "center",
+  fig.retina = 2,
+  fig.width = 10,
+  cache.lazy = FALSE
+)
+
+now <- Sys.time()
+
+library(tidyverse)
+library(fst)
+library(fs)
+library(DT)
+
+
+theme_set(theme_minimal())
+
+base_dir <- params$base_dir
+
+```
+
+# Dataset
+
+```{r read-dataset}
+conds <- read_csv(path(base_dir, "package-ifs.csv"))
+funcs <- read_csv(path(base_dir, "functions.csv"))
+
+E <- conds %>% left_join(funcs, by = c("package", "fun_name" = "fun"))
+```
+
+# Analysis
+
+## Categories
+
+```{r categorize_fun}
+categorize_cond <- function(args) {
+  e <- tryCatch(parse(text = args), error = function(e) NA)
+  
+  if(is.expression(e)) {
+    e <- e[[1]]
+    if(length(e) == 0) {
+      print("LENGTH 0!!")
+      return("EMPTY")
+    }
+    else if(length(e) == 1) {
+      #  it's a variable. 
+      if(is.symbol(e)) {
+        return ("VAR")
+      }
+      else if(is.logical(e)) {
+        return(as.character(e))
+      }
+      else {
+        # such as if(f())
+        return("FUNC")
+      }
+    }
+    else {
+      return(paste0(as.character(e[[1]]), collapse = " "))
+    }
+  }
+  else {
+    # complex conditions with multiple statements
+    # the deparsing step removed end of line characters
+    # so it does nto parse anymore
+    #print(args)
+    return("COMPLEX_COND")
+  }
+}
+```
+
+```{r}
+E <- E %>% mutate(category = map_chr(args, categorize_cond))
+```
+
+
+```{r common_ops}
+count(E, category, sort = TRUE) %>% mutate(pc = 100 *  n / sum(n), cpc = cumsum(pc)) %>% print(n = 20) %>% datatable()
+```
+
+
+## Use of function parameters
+
+```{r func_param}
+
+func_params_aux <- function(exp, params) {
+  if(is.symbol(exp)) {
+    if(as.character(exp) %in% params) {
+       return( c(1, 1))
+    }
+    else {
+      return( c(0, 1))
+    }
+  } else if(is.language(exp)) {
+    res <- lapply(exp[-1], func_params_aux, params)
+    res <- do.call(rbind, res)
+    return(c(sum(res[,1]), sum(res[,2])))
+  }
+  else {
+    return(c(0, 0))
+  }
+    
+}
+
+
+count_func_param <- function(cond, parameters) {
+  e <- tryCatch(parse(text = cond), error = function(e) NA)
+  
+  params <- strsplit(parameters, split = ";")[[1]]
+  if(is.expression(e)) {
+    e <- e[[1]]
+    return(func_params_aux(e, params))
+  }
+  else {
+    return(c(NA, NA))
+  }
+}
+```
+
+
+```{r param_per_if}
+E <- E %>% mutate(param_ratio = map2(args, params, count_func_param)) %>% unnest_wider(param_ratio, names_sep = "_") %>% mutate(ratio = param_ratio_1 / param_ratio_2)
+```
+
+```{r}
+E %>% dplyr::filter(!is.nan(ratio)) %>% count(ratio, sort = TRUE)  %>% mutate(pc = 100 *  n / sum(n), cpc = cumsum(pc)) 
+```
+
+And if we narrow it to some interesting conditions:
+
+```{r}
+E %>% dplyr::filter(!is.nan(ratio), category %in% c("==", "!", "VAR", ">", "is.null", "!=, ", "<")) %>% count(ratio, sort = TRUE)  %>% mutate(pc = 100 *  n / sum(n), cpc = cumsum(pc)) 
+```
+
+
+## Flags
+
+We are looking for flags, i.e. parameters of the functions that are used as-is in a condition.
+
+
+How many flags are parameters of the function?
+```{r}
+E %>% dplyr::filter(category == "VAR") %>% count(ratio) %>% mutate(pc = 100 *  n / sum(n)) 
+```
+
+
+Here are the functions with at least one condition with a flag:
+
+```{r flags}
+with_flags <- E %>% group_by(package, fun_name) %>% summarize(only_param = any(category == "VAR" & ratio == 1)) 
+```
+
+We can now get the packages that have a lot of such functions:
+
+```{r packages_with_flags}
+distrib_flags <- with_flags %>% summarize(n = sum(only_param), n_functions = n_distinct(fun_name)) %>% arrange(n)
+```
+
+And the good candidates for experimentation, i.e., with a high proportion of functions with flags:
+
+```{r flag_candidates}
+distrib_flags %>% dplyr::filter(n > 5, n / n_functions > 0.6) 
+```
+
