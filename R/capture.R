@@ -51,6 +51,8 @@ record_trace <- function(name, pkg=NULL, args, default_args, missing_args, retv,
 
         callee <- as.function(c(alist(), as.call(c(quote(`{`), args))), envir=env)
         globals <- as.list(environment(extract_closure(callee)), all.names=TRUE)
+        #remove `%>%` if it is here. We will add it anyway when generating a call
+        globals$`%>%` <- NULL
         globals <- lapply(globals, duplicate_global_var)
 
         # the natural trace
