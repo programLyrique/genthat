@@ -47,7 +47,7 @@ gen_call <- function(trace, call_hash, external_file = "", format_code = TRUE) {
   })
 }
 
-generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i) {
+generate_synthetic_files <- function(tracer_type, session_file, output_dir, run_i) {
   stopifnot(tracer_type == "set")
   
   tracer <- genthat::set_tracer(
@@ -66,14 +66,30 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
   
   stopifnot(all(vapply(synth_calls, function(x) attr(x, "synthetic"), TRUE)))
   
+  # Check here if all package directories already exist
+  pkgs <- unique(Map(function(trace) trace$pkg, synth_calls))
+  paths <- Map(function(pkg) file.path(output_dir, pkg), pkgs)
+  for(path in paths) {
+    stopifnot(dir.exists(path) || dir.create(path, recursive=TRUE))
+  }
   
+  log_debug("Generate synthetic files ", run_i, " with ", length(synth_calls), " new calls, for packages ", paste0(pkgs, collapse = " "))
   
-  log_debug("Run synthetic file ", run_i, " with ", length(synth_calls), " new calls.")
+  # Generate the files
+  pkg_paths <- new.env(parent = emptyenv())
+  for(pkg in pkgs) {
+    log_debug("Creating file for pkg ", pkg)
+    pkg_info <- list()
+    script_name <- file.path(output_dir, pkg, paste0("synthetic_", run_i, ".R"))
+    file_script <- file(script_name, open = "w+")# truncate any existing file
+    pkg_info$script_name <- script_name
+    pkg_info$file_script <- file_script
+    on.exit(close(file_script))
+    assign(pkg, pkg_info, pkg_paths)
+  }
   
-  # Generate the file
-  script <- file.path(output_dir, paste0("synthetic_", run_i, ".R"))
+
   
-  file_script <- file(script, open = "w+")# truncate any existing file
   
   # HACK
   # inject magrittr %>%
@@ -82,11 +98,15 @@ generate_synthetic_file <- function(tracer_type, session_file, output_dir, run_i
   # Write the prospective synthetic calls in the file
   
   for(call_hash in names(synth_calls)) {
-    code <- gen_call(synth_calls[[call_hash]], call_hash, script)
-    write(code, file = file_script, append = TRUE)
+    pkg_info <- get0(synth_calls[[call_hash]]$pkg, pkg_paths)
+    if(is.null(pkg_info)) {
+     stop("No package name for ", call_hash, ". Cannot continue.")
+    }
+    code <- gen_call(synth_calls[[call_hash]], call_hash, pkg_info$script_name)
+    write(code, file = pkg_info$file_script, append = TRUE)
   }
   
-  return(script)
+  return(Map(function(pkg) pkg$script_name, as.list(pkg_paths)))
 }
 
 #' @export
@@ -96,21 +116,26 @@ perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_
   runs <- data.frame(output=character(),
                      error=character())
   repeat {
-    synth_file <- generate_synthetic_file(tracer_type, session_file, output_dir, i)
-    if(is.null(synth_file) || i >= max_runs) {
+    synth_files <- generate_synthetic_files(tracer_type, session_file, output_dir, i)
+    if(is.null(synth_files) || i >= max_runs) {
       if(i == 1) {
         log_debug("No synthetic runs have been performed.")
       }
       else {
         log_debug("Total number of synthetic runs: ", if(i == max_runs) i else i - 1)
+        if(!is_debug_enabled() && !is.null(synth_files)) {
+          # that won't remove the last one...
+          file.remove(synth_files)
+        }
       }
       break
     }
-    run <- run_file(synth_file)
+    run <- lapply(synth_files, run_file)
+    names(run) <- NULL # We remove the package name because there should actually be only one package here
     runs <- rbind(runs, run)
-    if(!is_debug_enabled() && !is.null(synth_file)) {
+    if(!is_debug_enabled() && !is.null(synth_files)) {
       # that won't remove the last one...
-      file.remove(synth_file)
+      file.remove(synth_files)
     }
     i <- i + 1
   }
