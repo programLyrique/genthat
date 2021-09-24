@@ -132,7 +132,7 @@ perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_
     }
     run <- lapply(synth_files, run_file)
     names(run) <- NULL # We remove the package name because there should actually be only one package here
-    runs <- rbind(runs, run)
+    runs <- dplyr::bind_rows(runs, run) # more robust when there are different columns
     if(!is_debug_enabled() && !is.null(synth_files)) {
       # that won't remove the last one...
       file.remove(synth_files)
