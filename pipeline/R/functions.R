@@ -1,20 +1,19 @@
 gen_tests <- function(pkg, output) {
-  gen_from_package(
+  tibble::add_column(gen_from_package(
     pkg,
     types="all", 
     action="generate", 
     prune_tests=TRUE, 
     output_dir=output
-  ) 
+  ), package = pkg)
 }
 
 gen_tests_synthetic <- function(pkg, output) {
   options(genthat.synthetic = TRUE)
+  on.exit(options(genthat.synthetic = FALSE))
   gen_tests(pkg, output)
-  options(genthat.synthetic = FALSE)
 }
 
 merge_cov_results <- function(res) {
-  # TODO: add the package name
   dplyr::bind_rows(res)
 }
