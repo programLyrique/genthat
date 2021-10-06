@@ -124,8 +124,9 @@ perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_
       else {
         log_debug("Total number of synthetic runs: ", if(i == max_runs) i else i - 1)
         if(!is_debug_enabled() && !is.null(synth_files)) {
-          # that won't remove the last one...
-          file.remove(synth_files)
+          for(pkg in synth_files) {# One per package actually
+            file.remove(pkg)
+          }
         }
       }
       break
@@ -135,7 +136,9 @@ perform_synthetic_traces <- function(tracer_type, session_file, output_dir, run_
     runs <- dplyr::bind_rows(runs, run) # more robust when there are different columns
     if(!is_debug_enabled() && !is.null(synth_files)) {
       # that won't remove the last one...
-      file.remove(synth_files)
+      for(pkg in synth_files) {# One per package actually
+        file.remove(pkg)
+      }
     }
     i <- i + 1
   }
