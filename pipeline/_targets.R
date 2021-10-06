@@ -1,7 +1,12 @@
 library(targets)
+library(future)
+library(future.callr)
 source("R/functions.R")
 options(tidyverse.quiet = TRUE)
 options(genthat.source_paths = "/mnt/ocfs_vol_00/pdonatbo/conditionals/packages/")
+#options(genthat.debug = TRUE)
+
+plan(callr)
 
 tar_option_set(
   packages = c("genthat", "readr"),
