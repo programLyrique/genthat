@@ -22,6 +22,31 @@ gen_tests_synthetic <- function(pkg, output) {
   gen_tests(pkg, output)
 }
 
+tests_coverage <- function(pkg) {
+  base_path <- "/mnt/ocfs_vol_00/pdonatbo/conditionals/packages/"
+  #as.data.frame does not keep the package column, it seems
+  tibble::add_column(as.data.frame(package_coverage(file.path(base_path, pkg), type="tests")),
+                                       package = pkg)
+}
+
+coverage_number <- function(tests_coverage) {
+  pkg <- tests_coverage[1, "package"]
+  tibble::tibble(package = pkg, pkg_coverage = compute_coverage(tally_coverage(tests_coverage)))
+}
+
+coverage_number_genthat <- function(tests_coverage, res_genthat) {
+  pkg <- tests_coverage[1, "package"]
+  tibble::tibble(package = pkg, pkg_coverage = compute_coverage(tally_coverage(tests_coverage), attr(res_genthat, "raw_coverage")))
+}
+
 merge_cov_results <- function(res) {
+  # Compute here coverage for the whole package before binding rows
+  # Also, maybe find from that which functions have no coverage at all
   dplyr::bind_rows(res)
+}
+
+compare_coverages <- function(basic, with_genthat, with_synthetic) {
+  dplyr::left_join(dplyr::rename(basic, basic_coverage = pkg_coverage), dplyr::rename(with_genthat, genthat_coverage = pkg_coverage)) %>%
+    dplyr::left_join(dplyr::rename(with_synthetic, synthetic_coverage = pkg_coverage))
+  
 }
