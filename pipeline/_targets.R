@@ -4,6 +4,7 @@ library(future.callr)
 source("R/functions.R")
 options(tidyverse.quiet = TRUE)
 options(genthat.source_paths = "/mnt/ocfs_vol_00/pdonatbo/conditionals/packages/")
+options(future.wait.timeout = 60 * 60) # do not allow more than 1h for each task
 #options(genthat.debug = TRUE)
 
 plan(callr)
@@ -23,13 +24,15 @@ list(
     packages_to_run,
     read_lines(packages_file)
   ),
+  
+  # Use error = "continue" for all the coverage instrumentation targets?
   tar_target(basic_cov, tests_coverage(packages_to_run), pattern = map(packages_to_run)),
   tar_target(basic_cov_num, coverage_number(basic_cov), pattern = map(basic_cov)),
   
   tar_target(result, gen_tests(packages_to_run, "tmp2"), pattern = map(packages_to_run)),
   tar_target(result_num, coverage_number_genthat(basic_cov, result), pattern = map(basic_cov, result)),
   
-  tar_target(result_synthetic, gen_tests_synthetic(packages_to_run, "tmp2_syn"), pattern = map(packages_to_run)),
+  tar_target(result_synthetic, gen_tests_synthetic(packages_to_run, "tmp2_syn"), pattern = map(packages_to_run), error = "continue"),
   tar_target(result_synthetic_num, coverage_number_genthat(basic_cov, result_synthetic), pattern = map(basic_cov, result_synthetic)),
   
   tar_target(basic_cov_packages, merge_cov_results(basic_cov_num)),
