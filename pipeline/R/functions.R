@@ -6,6 +6,7 @@ set_common_options <- function() {
 
 gen_tests <- function(pkg, output) {
   set_common_options()
+  print(pkg)
   tibble::add_column(gen_from_package(
     pkg,
     types="all", 
@@ -32,6 +33,24 @@ tests_coverage <- function(pkg) {
 coverage_number <- function(tests_coverage) {
   pkg <- tests_coverage[1, "package"]
   tibble::tibble(package = pkg, pkg_coverage = compute_coverage(tally_coverage(tests_coverage)))
+}
+
+
+# Make sure that packages are installed and their sources are accessible
+add_package <- function(pkg) {
+  set_common_options()
+  options(warn = 2) #Fail when there is a warning already
+  on.exit(options(warn = 0))
+  #is it installed
+  if(nchar(system.file(package = pkg)) == 0) {
+    install.packages(pkg, dependencies = TRUE)
+  }
+  #Is the source code accessible
+  pkg_path <- file.path(getOption("genthat.source_paths"), pkg)
+  if(!dir.exists(pkg_path)) {
+    download_package(pkg, destdir = getOption("genthat.source_paths"))
+  }
+  pkg
 }
 
 coverage_number_genthat <- function(tests_coverage, res_genthat) {
