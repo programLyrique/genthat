@@ -4,7 +4,7 @@ set_common_options <- function() {
   options(genthat.source_paths = "/mnt/ocfs_vol_00/pdonatbo/conditionals/packages/")
 }
 
-gen_tests <- function(pkg, output) {
+gen_tests <- function(pkg, output, lib_paths = .libPaths()[1]) {
   set_common_options()
   print(pkg) # or tar_message_run ?
   tibble::add_column(gen_from_package(
@@ -12,18 +12,19 @@ gen_tests <- function(pkg, output) {
     types="all", 
     action="generate", 
     prune_tests=TRUE, 
-    output_dir=output
+    output_dir=output,
+    lib_paths = lib_paths
   ), package = pkg)
 }
 
-gen_tests_synthetic <- function(pkg, output) {
+gen_tests_synthetic <- function(pkg, output, lib_paths = .libPaths()[1]) {
   set_common_options()
   options(genthat.synthetic = TRUE)
   on.exit(options(genthat.synthetic = FALSE))
-  gen_tests(pkg, output)
+  gen_tests(pkg, output, lib_paths)
 }
 
-tests_coverage <- function(pkg) {
+tests_coverage <- function(pkg,lib_paths = .libPaths()[1]) {
   base_path <- "/mnt/ocfs_vol_00/pdonatbo/conditionals/packages/"
   #as.data.frame does not keep the package column, it seems
   tibble::add_column(as.data.frame(package_coverage(file.path(base_path, pkg), type="tests")),
@@ -68,9 +69,30 @@ install_cran_packages <- function(packages_to_install,
     Ncpus=floor(.9*parallel::detectCores())
   )
   
-  # Return the packages which successfully installed only
   installed <- installed.packages(lib.loc=lib)[,1]
-  intersect(installed, requested)
+  successful_installed <- intersect(installed, requested)
+  
+  # Extract the sources from the missing ones that successfully installed
+  installed_missing <- intersect(successful_installed, missing)
+
+  
+  archives <- list.files(destdir, pattern = "\\.tar\\.gz$", full.names = TRUE)
+  for(package in installed_missing) {
+    destfiles <- grep(package, archives, value = TRUE, fixed = TRUE)
+    if(length(destfiles) == 0) {
+      next;
+    }
+    destfile <- destfiles[[1]] # there should be only one anyway
+    pkgdir <- file.path(destdir, package)
+    if(dir.exists(pkgdir)) {
+      warning("Destination directory for extracting exists ", pkgdir, "\n")
+    }
+    message("Extracting", destfile ," to ", pkgdir, "\n")
+    utils::untar(destfile, exdir=destdir)
+    file.remove(destfile) # remove the archive so that it does not interfere with newer versions
+  }
+  
+  successful_installed
 }
 
 # Make sure that packages are installed and their sources are accessible

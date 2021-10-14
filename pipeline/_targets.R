@@ -42,22 +42,19 @@ list(
     packages_to_install,
     read_lines(packages_file)
   ),
-  tar_target_resilient(
+  tar_target(
     packages_to_run,
-    add_package(packages_to_install),
-    pattern = map(packages_to_install),
+    install_cran_packages(packages_to_install, lib_path, source_path),
     deployment = "main"
-    #error = "continue" # it is ok if we cannot install a package, we just do not compute anything on it
   ),
   
-  # Use error = "continue" for all the coverage instrumentation targets?
   tar_target_resilient(basic_cov, tests_coverage(packages_to_run), pattern = map(packages_to_run)),
   tar_target_resilient(basic_cov_num, coverage_number(basic_cov), pattern = map(basic_cov)),
   
-  tar_target_resilient(result, gen_tests(packages_to_run, "tmp2"), pattern = map(packages_to_run)),
+  tar_target_resilient(result, gen_tests(packages_to_run, "tmp2", lib_path), pattern = map(packages_to_run)),
   tar_target_resilient(result_num, coverage_number_genthat(basic_cov, result), pattern = map(basic_cov, result)),
   
-  tar_target_resilient(result_synthetic, gen_tests_synthetic(packages_to_run, "tmp2_syn"), pattern = map(packages_to_run)),
+  tar_target_resilient(result_synthetic, gen_tests_synthetic(packages_to_run, "tmp2_syn", lib_path), pattern = map(packages_to_run)),
   tar_target_resilient(result_synthetic_num, coverage_number_genthat(basic_cov, result_synthetic), pattern = map(basic_cov, result_synthetic)),
   
   tar_target(basic_cov_packages, merge_cov_results(basic_cov_num)),
