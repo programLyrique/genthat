@@ -6,7 +6,7 @@ set_common_options <- function() {
 
 gen_tests <- function(pkg, output, lib_paths = .libPaths()[1]) {
   set_common_options()
-  print(pkg) # or tar_message_run ?
+  message(pkg) # or tar_message_run ?
   tibble::add_column(gen_from_package(
     pkg,
     types="all", 
